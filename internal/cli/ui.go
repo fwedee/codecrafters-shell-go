@@ -3,24 +3,33 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 )
 
-type Input struct{}
-
-func (Input) Get(prompt string) string {
-	fmt.Print(prompt)
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	return scanner.Text()
+type Input struct {
+	in  *bufio.Scanner
+	out io.Writer
 }
 
-type Output struct{}
-
-func (Output) Print(text string) {
-	fmt.Print(text)
+func NewInput(in io.Reader, out io.Writer) *Input {
+	return &Input{
+		in:  bufio.NewScanner(in),
+		out: out,
+	}
 }
 
-func (Output) Println(text string) {
-	fmt.Println(text)
+func (i *Input) ReadLine(prompt string) (string, error) {
+	if _, err := fmt.Fprint(i.out, prompt); err != nil {
+		return "", err
+	}
+
+	if !i.in.Scan() {
+		if err := i.in.Err(); err != nil {
+			return "", err
+		}
+
+		return "", io.EOF
+	}
+
+	return i.in.Text(), nil
 }

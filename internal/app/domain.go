@@ -1,30 +1,35 @@
 package app
 
-type Input interface {
-	Get(prompt string) string
-}
+import (
+	"fmt"
+	"io"
+)
 
-type Output interface {
-	Print(text string)
-	Println(text string)
+type LineReader interface {
+	ReadLine(prompt string) (string, error)
 }
 
 type Command func(args []string)
 
+type shellInput struct {
+	Name string
+	Args []string
+}
+
 type App struct {
-	in       Input
-	out      Output
+	in       LineReader
+	out      io.Writer
 	registry map[string]Command
 }
 
-func (a *App) GetInput(prompt string) string {
-	return a.in.Get(prompt)
+func (a *App) ReadLine(prompt string) (string, error) {
+	return a.in.ReadLine(prompt)
 }
 
 func (a *App) Print(msg string) {
-	a.out.Print(msg)
+	fmt.Fprint(a.out, msg)
 }
 
 func (a *App) Println(msg string) {
-	a.out.Println(msg)
+	fmt.Fprintln(a.out, msg)
 }
